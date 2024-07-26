@@ -119,7 +119,7 @@ async function initializeRoboApp() {
     view = new MapView({
       container: "displayMap",
       map: displayMap,
-      center: [-25, 30],
+      center: [4.46, 50.50],
       zoom: 2,
       padding: {
         top: 55,
@@ -171,7 +171,7 @@ async function initializeRoboApp() {
     });
 
         // Event listeners for date and time pickers
-        timePickerstart.addEventListener('calciteInputTimePickerChange', (event) => {
+        timePickerstart.addEventListener('calciteInputChange', (event) => {
           startTime = event.target.value;
         });
     
@@ -179,7 +179,7 @@ async function initializeRoboApp() {
           startDate = event.target.value;
         });
     
-        timePickerend.addEventListener('calciteInputTimePickerChange', (event) => {
+        timePickerend.addEventListener('calciteInputChange', (event) => {
           endTime = event.target.value;
         });
     
@@ -261,13 +261,15 @@ async function initializeRoboApp() {
       `;
     }
 
-    function downloadReport(tripData) {
-      const reportContent = generateReportData(tripData);
-      const blob = new Blob([reportContent], { type: 'text/pdf' });
-      const link = document.createElement('a');
-      link.href = URL.createObjectURL(blob);
-      link.download = 'trip_report.pdf';
-      link.click();
+    function sendInvoiceTrip(tripData) {
+      // Get the current server's URL
+      // const baseUrl = window.location.origin;
+      const baseUrl = window.location.origin + window.location.pathname;
+      const newUrl = `${baseUrl}/submit?from=${encodeURIComponent(startingAddressName.name)}&to=${encodeURIComponent(endingAddressName.name)}&startDate=${encodeURIComponent(startDate)}&startTime=${encodeURIComponent(startTime)}&endDate=${encodeURIComponent(endDate)}&endTime=${encodeURIComponent(endTime)}&amount=${encodeURIComponent(amount)}&distance=${encodeURIComponent(tripData.routeResults[0].route.attributes.Total_Kilometers.toFixed(2))}&time=${encodeURIComponent(tripData.routeResults[0].route.attributes.Total_TravelTime.toFixed(2))}`;
+      console.log(newUrl);
+      // history.pushState(null, '', newUrl);
+      // Open the new URL in a new tab
+      window.open(newUrl, 'invoicePage');
     }
 
     function showReport(tripData) {
@@ -285,12 +287,65 @@ async function initializeRoboApp() {
       const tripData = await startTrip(startingAddressName, endingAddressName);
       if (tripData) {
         console.log("Trip data:", tripData);
+        view.goTo(
+          {
+            target: tripData.routeResults[0].route.geometry,
+          },
+          {
+            duration: 1500,
+          }
+        );
+        document.getElementById("endTripButton").disabled = false;
       }
     });
 
+    document.getElementById('endTripButton').addEventListener('click', () => {
+      view.graphics.removeAll();
+      routeLayer.graphics.removeAll();
+      view.goTo({
+        target: view.center,
+        zoom: 2
+      });
+      searchWidget.clear();
+      searchWidget2.clear();
+      timePickerstart.value = "";
+      datePickerstart.value = "";
+      timePickerend.value = "";
+      datePickerend.value = "";
+      document.getElementById("timePickerstart").disabled = true;
+      document.getElementById("datePickerstart").disabled = true;
+      document.getElementById("startTripButton").disabled = true;
+      document.getElementById("timePickerend").disabled = true;
+      document.getElementById("datePickerend").disabled = true;
+      document.getElementById("generateReportButton").disabled = true;
+    });
+
     document.getElementById('generateReportButton').addEventListener('click', () => showReport(tripData));
-    document.getElementById('downloadReportButton').addEventListener('click', () => downloadReport(tripData));
+    document.getElementById('viewInvoiceButton').addEventListener('click', () => sendInvoiceTrip(tripData));
     document.getElementById('exitReportButton').addEventListener('click', exitReport);
+
+    document.getElementById('startNewTripButton').addEventListener('click', () => {
+      document.getElementById('reportContainer').classList.add('hidden');
+      view.graphics.removeAll();
+      routeLayer.graphics.removeAll();
+      view.goTo({
+        target: view.center,
+        zoom: 2
+      });
+      searchWidget.clear();
+      searchWidget2.clear();
+      timePickerstart.value = "";
+      datePickerstart.value = "";
+      timePickerend.value = "";
+      datePickerend.value = "";
+      document.getElementById("timePickerstart").disabled = true;
+      document.getElementById("datePickerstart").disabled = true;
+      document.getElementById("timePickerend").disabled = true;
+      document.getElementById("datePickerend").disabled = true;
+      document.getElementById("startTripButton").disabled = true;
+      document.getElementById("endTripButton").disabled = true;
+      document.getElementById("generateReportButton").disabled = true;
+    });
 
 
     await view.when();
