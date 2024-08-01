@@ -299,7 +299,16 @@ async function initializeRoboApp() {
       }
     });
 
-    document.getElementById('endTripButton').addEventListener('click', () => {
+    function endtripBookFunction(tripData) {
+      pickupadd = startingAddressName.name;
+      dropoffadd = endingAddressName.name;
+      dist = tripData.routeResults[0].route.attributes.Total_Kilometers.toFixed(2);
+      time = tripData.routeResults[0].route.attributes.Total_TravelTime.toFixed(2);
+      book(pickupadd , 
+        dropoffadd , 
+        amount , 
+        dist , 
+        time);
       view.graphics.removeAll();
       routeLayer.graphics.removeAll();
       view.goTo({
@@ -312,16 +321,19 @@ async function initializeRoboApp() {
       datePickerstart.value = "";
       timePickerend.value = "";
       datePickerend.value = "";
+      tripAmount.value = "";
       document.getElementById("timePickerstart").disabled = true;
       document.getElementById("datePickerstart").disabled = true;
       document.getElementById("startTripButton").disabled = true;
       document.getElementById("timePickerend").disabled = true;
       document.getElementById("datePickerend").disabled = true;
       document.getElementById("generateReportButton").disabled = true;
-    });
+    }
+
+    document.getElementById('endTripButton').addEventListener('click', () => endtripBookFunction(tripData));
 
     document.getElementById('generateReportButton').addEventListener('click', () => showReport(tripData));
-    document.getElementById('viewInvoiceButton').addEventListener('click', () => sendInvoiceTrip(tripData));
+    // document.getElementById('viewInvoiceButton').addEventListener('click', () => sendInvoiceTrip(tripData));
     document.getElementById('exitReportButton').addEventListener('click', exitReport);
 
     document.getElementById('startNewTripButton').addEventListener('click', () => {
